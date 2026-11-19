@@ -1,0 +1,28 @@
+{
+  "shfield_meta_version": 1,
+  "order": 2,
+  "ordering": "ACN",
+  "normalization": "SN3D",
+  "channels": 9,
+  "sample_rate": 48000,
+  "peak_before_normalization": 1.0,
+  "coordinate_system": "+x front, +y left, +z up; theta from +z, phi from +x",
+  "scene": "impulse",
+  "sources": [
+    {
+      "name": "impulse_0",
+      "theta_deg": 90.0,
+      "phi_deg": 0.0
+    },
+    {
+      "name": "impulse_1",
+      "theta_deg": 90.0,
+      "phi_deg": 90.0
+    },
+    {
+      "name": "impulse_2",
+      "theta_deg": 45.0,
+      "phi_deg": -45.0
+    }
+  ]
+}

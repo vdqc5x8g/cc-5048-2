@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shfield"
+version = "0.1.0"
+description = "Spherical-harmonic sound-field encoding, rotation and decoding tool"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+shfield = "shfield.cli:main"
+shfield-view = "shfield.webapp:main"
+
+[tool.setuptools]
+packages = ["shfield"]
+
+[tool.setuptools.package-data]
+shfield = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

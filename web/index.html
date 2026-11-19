@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>shfield · 球谐声场空间音画视窗</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header>
+  <h1>球谐声场空间音画视窗</h1>
+  <p class="sub">
+    内核：ACN 声道顺序 / SN3D 归一化（内部规范），坐标系 +x 前、+y 左、+z 上。
+    所有编码、旋转、解码均由 <code>shfield</code> Python 内核计算，浏览器只负责绘制与播放。
+  </p>
+</header>
+
+<main>
+  <section class="panel controls">
+    <h2>1. 测试声源</h2>
+    <div class="row">
+      <label>场景
+        <select id="scene">
+          <option value="impulse">脉冲 impulse（看方向响应）</option>
+          <option value="noise">互不相关白噪声 noise（可听定位）</option>
+        </select>
+      </label>
+      <label>噪声时长(s) <input id="duration" type="number" value="1.5" min="0.2" max="8" step="0.1" /></label>
+      <label>随机种子 <input id="seed" type="number" value="0" min="0" step="1" /></label>
+    </div>
+    <table id="sourceTable">
+      <thead><tr><th>名称</th><th>theta（离上方°）</th><th>phi（前方起，左正°）</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="row">
+      <button id="addSource" type="button">添加声源</button>
+      <button id="presetFront" type="button">前置单源</button>
+      <button id="presetFour" type="button">四向噪声</button>
+    </div>
+
+    <h2>2. 球谐阶数</h2>
+    <div class="row">
+      <label>阶数 N
+        <input id="order" type="range" min="0" max="6" step="1" value="2" />
+        <span id="orderLabel">2</span>
+      </label>
+      <span class="muted">声道数 (N+1)² = <b id="channelLabel">9</b></span>
+    </div>
+
+    <h2>3. 听者旋转（作用于声场系数，非交换左右）</h2>
+    <div class="row">
+      <label>yaw 偏航° <input id="yaw" type="range" min="-180" max="180" step="1" value="0" /><span id="yawLabel">0</span></label>
+      <label>pitch 俯仰° <input id="pitch" type="range" min="-90" max="90" step="1" value="0" /><span id="pitchLabel">0</span></label>
+      <label>roll 翻滚° <input id="roll" type="range" min="-180" max="180" step="1" value="0" /><span id="rollLabel">0</span></label>
+    </div>
+
+    <h2>4. 解码目标</h2>
+    <div class="row">
+      <label>布局
+        <select id="layout"></select>
+      </label>
+      <label><input id="binaural" type="checkbox" checked /> 双耳耳机（合成 HRTF）</label>
+    </div>
+    <div class="row">
+      <button id="compute" type="button" class="primary">运行编码 → 旋转 → 解码</button>
+      <button id="play" type="button" disabled>试听结果</button>
+      <button id="stop" type="button" disabled>停止</button>
+    </div>
+  </section>
+
+  <section class="panel view">
+    <h2>声场方向（听者坐标系）</h2>
+    <canvas id="map" width="900" height="450"></canvas>
+    <div class="legend">
+      <span><i class="dot src"></i>声源（听者相对方向）</span>
+      <span><i class="dot spk"></i>扬声器</span>
+      <span>横轴 phi 方位角（前=0°，左=+90°），纵轴 theta 极角（上=0°，水平=90°）</span>
+    </div>
+
+    <h2>结果区：方向与可听结果</h2>
+    <div id="status" class="status">尚未运行。</div>
+    <pre id="results" class="results"></pre>
+  </section>
+</main>
+
+<footer>
+  离线复核：用 <code>python -m shfield.cli inspect file.wav</code> 查看每个 ACN 声道内容；
+  侧车 <code>.sh.json</code> 声明顺序与归一化约定。
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

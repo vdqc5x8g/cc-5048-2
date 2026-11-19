@@ -1,0 +1,28 @@
+{
+  "shfield_meta_version": 1,
+  "order": 3,
+  "ordering": "ACN",
+  "normalization": "SN3D",
+  "channels": 16,
+  "sample_rate": 48000,
+  "peak_before_normalization": 2.7816762396580677,
+  "coordinate_system": "+x front, +y left, +z up; theta from +z, phi from +x",
+  "scene": "noise",
+  "sources": [
+    {
+      "name": "noise_0",
+      "theta_deg": 90.0,
+      "phi_deg": 0.0
+    },
+    {
+      "name": "noise_1",
+      "theta_deg": 90.0,
+      "phi_deg": 119.99999999999999
+    },
+    {
+      "name": "noise_2",
+      "theta_deg": 59.99999999999999,
+      "phi_deg": -59.99999999999999
+    }
+  ]
+}

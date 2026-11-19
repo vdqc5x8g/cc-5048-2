@@ -1,0 +1,17 @@
+file: /workspace/examples/out/scene_fuma.wav
+sample rate: 48000  channels: 9  samples: 9600
+convention: order=2 ordering=FuMa normalization=FuMa channels=9
+per-order energy:
+  order 0: 1.2656e-04
+  order 1: 2.5312e-04
+  order 2: 2.5312e-04
+per-channel RMS (canonical ACN/SN3D):
+  ACN  0: 1.1250e-02
+  ACN  1: 1.0270e-02
+  ACN  2: 6.4952e-03
+  ACN  3: 1.0270e-02
+  ACN  4: 3.9775e-03
+  ACN  5: 5.6250e-03
+  ACN  6: 6.8892e-03
+  ACN  7: 5.6250e-03
+  ACN  8: 1.1250e-02
