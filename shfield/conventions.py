@@ -32,35 +32,67 @@ FUMA = "FuMa"
 ORDERINGS = (ACN, FUMA)
 FUMA_NORMALIZATION = "FuMa"
 
-# FuMa channel label -> (order l, degree m).  Sign-interleaved Gerzon naming.
+# FuMa channel label -> (order l, degree m).
+#
+# FuMa = WXYZ | RSTUV | KLMNOPQ, ACN = WYZX | VTRSU | QOMKLNP (ambiX/Malham).
+# Within each order the FuMa letters are NOT in m order: for l=2 the sequence
+# R,S,T,U,V is (m=0, +1, -1, +2, -2), and for l=3 K,L,M,N,O,P,Q is
+# (m=0, +1, -1, +2, -2, +3, -3).  Treating the letter order as plain
+# m=-l..l (which a naive table does) silently swaps S/T and U/V (or L/M, N/O,
+# P/Q): a channel-order inversion that on a single axis is easy to mistake for
+# a coordinate handedness flip.  This table is the authoritative one.
 _FUMA_LM = [
     (0, 0),  # W
     (1, 1),  # X : front (+x), ACN channel 3
     (1, -1),  # Y : left (+y), ACN channel 1
     (1, 0),  # Z : up (+z), ACN channel 2
-    (2, 0),  # R
-    (2, -1),  # S
-    (2, 1),  # T
-    (2, -2),  # U
-    (2, 2),  # V
-    (3, 0),  # K
-    (3, -1),  # L
-    (3, 1),  # M
-    (3, -2),  # N
-    (3, 2),  # O
-    (3, -3),  # P
-    (3, 3),  # Q
+    (2, 0),  # R : m=0
+    (2, 1),  # S : m=+1
+    (2, -1),  # T : m=-1
+    (2, 2),  # U : m=+2
+    (2, -2),  # V : m=-2
+    (3, 0),  # K : m=0
+    (3, 1),  # L : m=+1
+    (3, -1),  # M : m=-1
+    (3, 2),  # N : m=+2
+    (3, -2),  # O : m=-2
+    (3, 3),  # P : m=+3
+    (3, -3),  # Q : m=-3
 ]
 
-# Per-order gain to convert FuMa (max-N) coefficients INTO SN3D.
-# References: Daniel (2001), Malham/Furse max-N weights, ambiX converter.
-# SN3D = FuMa * gain[l]; check: l=0 gives SN3D W = sqrt(2) * (1/2) = 1/sqrt(2).
-_FUMA_TO_SN3D_GAIN = {
-    0: np.sqrt(2.0),
-    1: 1.0,
-    2: np.sqrt(3.0),
-    3: np.sqrt(5.0 / 2.0),
+# Per-channel gain to convert FuMa (max-N) coefficients INTO SN3D.
+#
+# FuMa uses max-N normalisation: each non-omni component of a unit plane wave
+# peaks at 1, so the FuMa->SN3D factor is the peak value of the corresponding
+# SN3D basis function, max|Y^SN3D|.  That peak is *channel* dependent (m=0
+# reaches 1 while m!=0 does not), so a single per-order factor is wrong from
+# order 2 on.  l=0 is the documented -3 dB FuMa W correction (W_FuMa = 1/2).
+# Values agree with the ambiX reference converter (libambix adaptor_fuma.c):
+# sqrt(3)/2, sqrt(32/45), sqrt(5/9), sqrt(5/8).
+_FUMA_PEAK_GAIN = {
+    2: {0: 1.0, 1: np.sqrt(3.0) / 2.0, 2: np.sqrt(3.0) / 2.0},
+    3: {
+        0: 1.0,
+        1: np.sqrt(32.0 / 45.0),
+        2: np.sqrt(5.0 / 9.0),
+        3: np.sqrt(5.0 / 8.0),
+    },
 }
+
+
+def fuma_to_sn3d_gain(order: int) -> np.ndarray:
+    """Per-ACN-channel gain mapping FuMa (max-N) coefficients to SN3D."""
+    gains = np.empty(channel_count(order))
+    for l in range(order + 1):
+        for m in range(-l, l + 1):
+            i = acn_index(l, m)
+            if l == 0:
+                gains[i] = np.sqrt(2.0)
+            elif l == 1:
+                gains[i] = 1.0
+            else:
+                gains[i] = _FUMA_PEAK_GAIN[l][abs(m)]
+    return gains
 
 SUPPORTED_FUMA_CHANNELS = (4, 9, 16)
 
@@ -169,10 +201,7 @@ def convert_to_acn_sn3d(
     if convention.ordering == FUMA:
         mapping = fuma_to_acn_map(convention.order)
         out = signals[mapping]
-        gains = np.empty(convention.channels)
-        for l in range(convention.order + 1):
-            for m in range(-l, l + 1):
-                gains[acn_index(l, m)] = _FUMA_TO_SN3D_GAIN[l]
+        gains = fuma_to_sn3d_gain(convention.order)
         return out * gains[:, None] if out.ndim == 2 else out * gains
 
     # ACN with N3D: N3D -> SN3D is multiplication by sqrt(4*pi/(2l+1)).
@@ -192,10 +221,7 @@ def convert_from_acn_sn3d(
         return signals.copy()
     if convention.ordering == FUMA:
         # First express in ACN/FuMa-normalized, then permute to FuMa order.
-        gains = np.empty(convention.channels)
-        for l in range(convention.order + 1):
-            for m in range(-l, l + 1):
-                gains[acn_index(l, m)] = _FUMA_TO_SN3D_GAIN[l]
+        gains = fuma_to_sn3d_gain(convention.order)
         acn_fuma = signals / (gains[:, None] if signals.ndim == 2 else gains)
         mapping = fuma_to_acn_map(convention.order)  # ACN i <- FuMa mapping[i]
         out = np.empty_like(acn_fuma)

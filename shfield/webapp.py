@@ -30,6 +30,7 @@ from scipy.io import wavfile
 from .analysis import field_directional_response, sh_energy, spherical_energy_conservation
 from .conventions import ConventionError
 from .decode import NAMED_LAYOUTS, binaural_decode, decode, decoding_matrix
+from .diagnostics import run_diagnostic as diagnose
 from .encoding import (
     Source,
     encode_sources,
@@ -222,6 +223,9 @@ class _Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
+        if path == "/api/diagnose":
+            self._handle_diagnose()
+            return
         if path != "/api/compute":
             self._send_json({"ok": False, "error": f"unknown path {path}"}, 404)
             return
@@ -250,6 +254,29 @@ class _Handler(BaseHTTPRequestHandler):
         except Exception:  # pragma: no cover - surface unexpected kernel bugs
             self._send_json(
                 {"ok": False, "error": traceback.format_exc(), "kind": "internal"}, 500
+            )
+
+    def _handle_diagnose(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            payload = json.loads(self.rfile.read(length) or b"{}")
+            result = diagnose(
+                order=int(payload.get("order", 3)),
+                sample_rate=SR,
+                yaw_deg=float(payload.get("yaw", 40.0)),
+                pitch_deg=float(payload.get("pitch", 25.0)),
+                bypass_import=bool(payload.get("bypass_import", False)),
+                bypass_normalization=bool(payload.get("bypass_normalization", False)),
+                bypass_rotation=bool(payload.get("bypass_rotation", False)),
+            )
+            self._send_json(result)
+        except (ValueError, KeyError, TypeError) as exc:
+            self._send_json({"ok": False, "error": str(exc),
+                             "kind": exc.__class__.__name__}, 422)
+        except Exception:  # pragma: no cover
+            self._send_json(
+                {"ok": False, "error": traceback.format_exc(), "kind": "internal"},
+                500,
             )
 
     def _serve_file(self, path: Path, content_type: str) -> None:

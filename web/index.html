@@ -81,6 +81,60 @@
     <div id="status" class="status">尚未运行。</div>
     <pre id="results" class="results"></pre>
   </section>
+
+  <section class="panel diag">
+    <h2>诊断视图：逐段替换变换</h2>
+    <p class="sub">
+      非对称测试场（前上方脉冲 + 斜后方窄带声），先绕 +z 再绕 +y，按逆序还原。
+      每个环节可单独旁路；首个偏离参考方向的阶次被钉出。独立参照是“把点源按同一旋转
+      移动后重新编码”，不是回放器自己的往返。零阶负对照检验旋转是否只改变能量。
+    </p>
+    <div class="row">
+      <label>阶数 N
+        <select id="diagOrder">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+        </select>
+      </label>
+      <label>yaw° <input id="diagYaw" type="number" value="40" step="1" /></label>
+      <label>pitch° <input id="diagPitch" type="number" value="25" step="1" /></label>
+    </div>
+    <div class="row toggles">
+      <label class="chk"><input id="bypassImport" type="checkbox" /> 旁路输入映射</label>
+      <label class="chk"><input id="bypassNorm" type="checkbox" /> 旁路归一化</label>
+      <label class="chk"><input id="bypassRot" type="checkbox" /> 旁路旋转</label>
+    </div>
+    <div class="row">
+      <button id="runDiag" type="button" class="primary">运行诊断</button>
+    </div>
+    <div id="diagStatus" class="status">尚未运行。</div>
+    <div class="diag-grid">
+      <div>
+        <h3>输入映射 / 归一化（首个偏离阶次）</h3>
+        <table id="stageTable">
+          <thead><tr><th>环节</th><th>首偏阶</th><th>l0</th><th>l1</th><th>l2</th><th>l3</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div>
+        <h3>运动姿态：逆序 vs 同序还原</h3>
+        <table id="motionTable">
+          <thead><tr><th>姿态</th><th>逆序</th><th>同序</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="muted" id="poseReduction"></p>
+      </div>
+    </div>
+    <h3>零阶负对照 与 归因</h3>
+    <pre id="diagSummary" class="results"></pre>
+    <canvas id="orderChart" width="900" height="240"></canvas>
+    <div class="legend">
+      <span><i class="dot hand"></i>手性/极性反转首偏 l=1</span>
+      <span><i class="dot num"></i>高阶通道编号首偏 l≥2</span>
+      <span>柱子高度=该阶相对偏差，红线=容差</span>
+    </div>
+  </section>
 </main>
 
 <footer>

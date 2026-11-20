@@ -73,3 +73,19 @@ canvas {
   padding: 10px; max-height: 320px; overflow: auto; font-size: 12px;
 }
 footer { padding: 0 24px 24px; color: var(--muted); font-size: 12px; }
+
+/* --- diagnostic view --- */
+.panel.diag { grid-column: 1 / -1; }
+.panel.diag h3 { font-size: 13px; margin: 12px 0 6px; color: var(--muted); }
+.diag-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;
+}
+@media (max-width: 1000px) { .diag-grid { grid-template-columns: 1fr; } }
+.toggles label.chk { flex-direction: row; align-items: center; gap: 6px; }
+#stageTable td, #motionTable td { font-variant-numeric: tabular-nums; }
+td.pass { color: var(--good); }
+td.fail { color: var(--bad); }
+td.first { font-weight: 700; }
+#orderChart { margin-top: 10px; }
+.dot.hand { background: var(--src); }
+.dot.num { background: var(--spk); }

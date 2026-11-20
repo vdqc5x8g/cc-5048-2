@@ -11,6 +11,7 @@ diag      validate an SH WAV against an expected order, with clear errors
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 
 import numpy as np
@@ -182,6 +183,75 @@ def cmd_diag(args) -> int:
     return 0
 
 
+def _print_diagnostic(result: dict) -> None:
+    print(f"order N={result['order']}  channels={result['channels']}  "
+          f"tolerance={result['tolerance']:g}")
+    print("\n输入映射/归一化环节（相对偏差按阶次，None=该阶首次偏离）:")
+    for stage in result["stages"]:
+        if not stage["applied"]:
+            print(f"  {stage['variant']:18s} 已旁路")
+            continue
+        rel = stage["per_order_relative"]
+        rel_text = " ".join(f"l{l}={v:.2e}" for l, v in rel.items())
+        print(f"  {stage['variant']:18s} 首个偏离={stage['first_deviating_order']}"
+              f"  {rel_text}")
+    rot = result["rotation"]
+    print(f"\n旋转 vs 独立点源参照: 首个偏离={rot['first_deviating_order']} "
+          f"通过={rot['pass']}")
+    print("运动（逆序还原 vs 同序还原）:")
+    for pose in result["motion"]["poses"]:
+        if pose["reverse_restore"] is None:
+            print(f"  {pose['name']:20s} 旋转已旁路")
+            continue
+        print(f"  {pose['name']:20s} 逆序={pose['reverse_restore']['pass']} "
+              f"同序={pose['same_order_restore']['pass']}")
+    red = result["motion"]["same_order_pose_reduction"]
+    print(f"  同序还原仍失败的最小姿态集: {red['reduced']} "
+          f"(仍失败={red['reduced_still_fails']})")
+    print(f"\n零阶负对照: 通过={result['omni_control']['pass']} "
+          f"能量漂移={result['omni_control']['relative_drift']:.2e}")
+    print(f"归因: {result['confusion']['attribution']}")
+
+
+def cmd_diagnose(args) -> int:
+    from .diagnostics import run_diagnostic
+
+    try:
+        result = run_diagnostic(
+            order=args.order,
+            sample_rate=args.sample_rate,
+            yaw_deg=args.yaw,
+            pitch_deg=args.pitch,
+            bypass_import=args.bypass_import,
+            bypass_normalization=args.bypass_normalization,
+            bypass_rotation=args.bypass_rotation,
+        )
+    except ValueError as exc:
+        print(f"DIAGNOSE ERROR: {exc}", file=sys.stderr)
+        return 2
+    if args.json:
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        _print_diagnostic(result)
+    return 0
+
+
+def cmd_sample(args) -> int:
+    from .diagnostics import write_project_sample
+
+    try:
+        out = write_project_sample(args.out_dir, order=args.order,
+                                   sample_rate=args.sample_rate)
+    except ValueError as exc:
+        print(f"SAMPLE ERROR: {exc}", file=sys.stderr)
+        return 2
+    for name, path in out["written"].items():
+        print(f"wrote {name}: {path}")
+    print("manifest stores per-order coefficients and signal recipes; "
+          "rebuild without the WAV scale factor")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="shfield",
@@ -226,6 +296,32 @@ def build_parser() -> argparse.ArgumentParser:
     p_diag.add_argument("--ordering", choices=["ACN", "FuMa"], default=None)
     p_diag.add_argument("--normalization", choices=["SN3D", "N3D", "FuMa"], default=None)
     p_diag.set_defaults(func=cmd_diag)
+
+    p_diagnose = sub.add_parser(
+        "diagnose",
+        help="stage-by-stage diagnostic view (bypass, first deviating order, controls)",
+    )
+    p_diagnose.add_argument("--order", type=int, default=3, choices=[1, 2, 3])
+    p_diagnose.add_argument("--sample-rate", type=int, default=DEFAULT_SR)
+    p_diagnose.add_argument("--yaw", type=float, default=40.0)
+    p_diagnose.add_argument("--pitch", type=float, default=25.0)
+    p_diagnose.add_argument("--bypass-import", action="store_true",
+                            help="switch off the FuMa input mapping stage")
+    p_diagnose.add_argument("--bypass-normalization", action="store_true",
+                            help="switch off the max-N -> SN3D gain stage")
+    p_diagnose.add_argument("--bypass-rotation", action="store_true",
+                            help="switch off the coefficient rotation stage")
+    p_diagnose.add_argument("--json", action="store_true",
+                            help="emit the full result as JSON")
+    p_diagnose.set_defaults(func=cmd_diagnose)
+
+    p_sample = sub.add_parser(
+        "sample", help="write the reproducible diagnostic field project"
+    )
+    p_sample.add_argument("out_dir")
+    p_sample.add_argument("--order", type=int, default=3, choices=[1, 2, 3])
+    p_sample.add_argument("--sample-rate", type=int, default=DEFAULT_SR)
+    p_sample.set_defaults(func=cmd_sample)
     return parser
 
 

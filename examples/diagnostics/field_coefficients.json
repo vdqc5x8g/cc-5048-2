@@ -1,0 +1,306 @@
+{
+  "description": "Reproducible asymmetric + omni diagnostic fields",
+  "coordinate_system": "+x front, +y left, +z up; theta from +z, phi from +x",
+  "internal_convention": "ACN/SN3D",
+  "order": 3,
+  "sample_rate": 48000,
+  "fields": {
+    "asymmetric": {
+      "wav": "asymmetric_field.wav",
+      "wav_peak_before_normalization": 0.8191520442889934,
+      "convention": "ACN/SN3D",
+      "sources": [
+        {
+          "name": "front_upper_impulse",
+          "theta_deg": 55.0,
+          "phi_deg": 0.0,
+          "signal": {
+            "kind": "impulse",
+            "delay_ms": 50.0,
+            "amplitude": 1.0
+          }
+        },
+        {
+          "name": "rear_oblique_narrowband",
+          "theta_deg": 115.0,
+          "phi_deg": 150.0,
+          "signal": {
+            "kind": "narrowband_tone",
+            "freq_hz": 1500.0,
+            "duration_s": 0.3,
+            "amplitude": 0.4,
+            "mod_hz": 3.0
+          }
+        }
+      ],
+      "per_order_encoding_coefficients": {
+        "front_upper_impulse": {
+          "0": [
+            0.707106781187
+          ],
+          "1": [
+            0.0,
+            0.573576436351,
+            0.819152044289
+          ],
+          "2": [
+            0.0,
+            0.0,
+            -0.006515107494,
+            0.813797681349,
+            0.581111768255
+          ],
+          "3": [
+            0.0,
+            0.0,
+            0.0,
+            -0.388612477799,
+            0.323523594459,
+            0.745308328082,
+            0.434543809091
+          ]
+        },
+        "rear_oblique_narrowband": {
+          "0": [
+            0.707106781187
+          ],
+          "1": [
+            0.453153893518,
+            -0.422618261741,
+            -0.784885567221
+          ],
+          "2": [
+            -0.616045353632,
+            -0.331706974084,
+            -0.232090707265,
+            0.574533332339,
+            0.355673950753
+          ],
+          "3": [
+            0.588528018056,
+            0.582164806986,
+            -0.029683792279,
+            0.445221793278,
+            0.051413836388,
+            -0.336113008026,
+            0.0
+          ]
+        }
+      },
+      "coefficient_snapshot": {
+        "0": {
+          "sample_index": 2400,
+          "values": [
+            0.707106781187
+          ]
+        },
+        "1": {
+          "sample_index": 2400,
+          "values": [
+            -0.0,
+            0.573576436351,
+            0.819152044289
+          ]
+        },
+        "2": {
+          "sample_index": 2400,
+          "values": [
+            0.0,
+            0.0,
+            -0.006515107494,
+            0.813797681349,
+            0.581111768255
+          ]
+        },
+        "3": {
+          "sample_index": 2400,
+          "values": [
+            -0.0,
+            -0.0,
+            0.0,
+            -0.388612477799,
+            0.323523594459,
+            0.745308328082,
+            0.434543809091
+          ]
+        }
+      }
+    },
+    "asymmetric_fuma": {
+      "wav": "asymmetric_field_fuma.wav",
+      "source_field": "asymmetric",
+      "convention": "FuMa/max-N (reference-authored)",
+      "channels": 16,
+      "fuMa_lm": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          -1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          -2
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          -1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          -2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          -3
+        ]
+      ],
+      "maxn_gain": [
+        1.4142135623730951,
+        1.0,
+        1.0,
+        1.0,
+        0.8660254037844386,
+        0.8660254037844386,
+        1.0,
+        0.8660254037844386,
+        0.8660254037844386,
+        0.7905694150420949,
+        0.7453559924999299,
+        0.8432740427115678,
+        1.0,
+        0.8432740427115678,
+        0.7453559924999299,
+        0.7905694150420949
+      ],
+      "wav_peak_before_normalization": 0.9999360514724721
+    },
+    "omni": {
+      "wav": "omni_field.wav",
+      "wav_peak_before_normalization": 0.35352135019537484,
+      "convention": "ACN/SN3D",
+      "sources": [
+        {
+          "name": "omni_control",
+          "theta_deg": 90.0,
+          "phi_deg": 0.0,
+          "signal": {
+            "kind": "narrowband_tone",
+            "freq_hz": 700.0,
+            "duration_s": 0.3,
+            "amplitude": 0.5,
+            "mod_hz": 2.0
+          }
+        }
+      ],
+      "per_order_encoding_coefficients": {
+        "omni_control": {
+          "0": [
+            0.707106781187
+          ],
+          "1": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "2": [
+            0.0,
+            0.0,
+            -0.5,
+            0.0,
+            0.866025403784
+          ],
+          "3": [
+            0.0,
+            0.0,
+            -0.0,
+            -0.0,
+            -0.612372435696,
+            0.0,
+            0.790569415042
+          ]
+        }
+      },
+      "coefficient_snapshot": {
+        "0": {
+          "sample_index": 11983,
+          "values": [
+            -0.353521350195
+          ]
+        },
+        "1": {
+          "sample_index": 0,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "2": {
+          "sample_index": 0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "3": {
+          "sample_index": 0,
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

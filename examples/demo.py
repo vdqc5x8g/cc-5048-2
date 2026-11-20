@@ -111,6 +111,67 @@ def main() -> int:
     section("7. 双耳解码输出 (合成 HRTF, 虚拟扬声器环)")
     ears = binaural_decode(coeffs_noise, order, quad_layout(), SR)
     print("binaural output shape:", ears.shape, "(L/R, samples), finite:", np.all(np.isfinite(ears)))
+
+    section("8. 逐段替换诊断：首个偏离阶次指纹 + 零阶负对照")
+    from shfield.diagnostics import run_diagnostic
+
+    report = run_diagnostic(order=3)
+    for s in report["stages"]:
+        print(f"  {s['variant']:<18} 首个偏离阶次={s['first_deviating_order']}")
+    assert report["stages"][0]["first_deviating_order"] is None
+    assert report["confusion"]["first_deviating_by_variant"]["no_mapping"] == 1
+    assert report["confusion"]["first_deviating_by_variant"]["no_normalization"] == 0
+    assert report["confusion"]["first_deviating_by_variant"]["high_order_swap"] == 2
+    assert report["confusion"]["first_deviating_by_variant"]["handedness_flip"] == 1
+    print("旋转 vs 独立点源参照通过:", report["rotation"]["pass"])
+    print("零阶全向场能量相对漂移:",
+          f"{report['omni_control']['relative_drift']:.2e}",
+          "通过:", report["omni_control"]["pass"])
+    assert report["rotation"]["pass"]
+    assert report["omni_control"]["pass"]
+
+    section("9. 两轴运动：逆序还原回起点，同序还原仅在非交换姿态上失败")
+    poses = report["motion"]["poses"]
+    for p in poses:
+        print(f"  {p['name']:<20} 逆序回起点={p['reverse_restore']['pass']} "
+              f"同序回起点={p['same_order_restore']['pass']}")
+    assert all(p["reverse_restore"]["pass"] for p in poses)
+    assert any(not p["same_order_restore"]["pass"] for p in poses)
+    red = report["motion"]["same_order_pose_reduction"]
+    print("同序仍失败的最小姿态集:", red["reduced"])
+
+    section("10. 可重建工程样例：仅凭 JSON 重建，FuMa 副本导入对齐")
+    import json
+    import tempfile
+
+    from shfield.diagnostics import (
+        per_order_deviation,
+        rebuild_field,
+        test_field_bundle,
+        write_project_sample,
+    )
+    from shfield.io_wav import read_sh_wav
+
+    with tempfile.TemporaryDirectory() as tmp:
+        write_project_sample(tmp, order=3)
+        manifest = json.loads((Path(tmp) / "field_coefficients.json").read_text())
+        rebuilt = rebuild_field(manifest, "asymmetric")
+        original = test_field_bundle(3)["asymmetric"]["coefficients"]
+        print("重建最大误差:", f"{np.max(np.abs(rebuilt - original)):.2e}")
+        assert np.allclose(rebuilt, original, atol=1e-12)
+
+        fuma, _, _, _ = read_sh_wav(
+            Path(tmp) / "asymmetric_field_fuma.wav",
+            ordering="FuMa", normalization="FuMa",
+        )
+        fuma = fuma / 0.9 * manifest["fields"]["asymmetric_fuma"][
+            "wav_peak_before_normalization"
+        ]
+        dev = per_order_deviation(fuma, original, 3)
+        print("FuMa 副本导入通过:", dev["pass"],
+              f"(最大阶相对偏差 {max(v for v in dev['relative'].values()):.2e})")
+        assert dev["pass"]
+
     print("\nALL DEMO CHECKS PASSED")
     return 0
 
